@@ -2,14 +2,21 @@
 Created by BSIT 2B
 
 # how to run 
+
+// cd todo_list
+
 // adb start-server
 
 // emulator -avd "Pixel_Android_15"
 
-//if you don't have any emulator, download at 
+// flutter run 
+
+# If no sdk get from 
 
 // https://developer.android.com/studio
 
-// flutter run
+// or use your phone as emulator
 
 # tweak at lib/main.dart
+
+
