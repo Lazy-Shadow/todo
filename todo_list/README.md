@@ -1,16 +1,22 @@
-# todo_list
+# todo flutter project
+Created by BSIT 2B
 
-A new Flutter project.
+# how to run 
 
-## Getting Started
+// cd todo_list
 
-This project is a starting point for a Flutter application.
+// adb start-server
 
-A few resources to get you started if this is your first Flutter project:
+// emulator -avd "Pixel_Android_15"
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+// flutter run 
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# If no sdk get from 
+
+// https://developer.android.com/studio
+
+// or use your phone as emulator
+
+# tweak at lib/main.dart
+
+
