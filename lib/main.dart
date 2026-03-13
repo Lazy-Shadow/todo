@@ -734,7 +734,7 @@ class _TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: key!,  // PERFORMANCE: Use the key passed to constructor
+      key: key ?? ValueKey(task.id),  // PERFORMANCE: Use the key passed to constructor
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
