@@ -6,6 +6,10 @@ Created by BSIT 2B
 
 // emulator -avd "Pixel_Android_15"
 
+//if you don't have any emulator, download at 
+
+// https://developer.android.com/studio
+
 // flutter run
 
 # tweak at lib/main.dart
