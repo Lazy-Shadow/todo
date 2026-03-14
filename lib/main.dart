@@ -11,9 +11,6 @@ void main() async {
   // because SharedPreferences involves platform channels (native code)
   // which are relatively slow to access.
   final prefs = await SharedPreferences.getInstance();
-  
-  // Pre-cache the app icon at startup
-  final loader = ResizeImage.resizeIfNeeded(48, 48, const AssetImage('assets/icon/logo.jpg'));
   runApp(TodoApp(prefs: prefs));
 }
 
