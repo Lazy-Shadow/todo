@@ -34,6 +34,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     signingConfigs {
@@ -48,8 +49,16 @@ android {
 
     buildTypes {
         getByName("release") {
-            // Safety check: if no key.properties, use debug so build doesn't crash locally
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = if (keyProps.isEmpty) signingConfigs.getByName("debug") else signingConfigs.getByName("release")
+        }
+        getByName("debug") {
+            isMinifyEnabled = false
         }
     }
 

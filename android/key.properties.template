@@ -1,0 +1,9 @@
+# Keystore signing configuration for release builds
+# IMPORTANT: Keep this file secret and never commit it to version control!
+# Add this file to your .gitignore
+
+# Replace these values with your actual keystore information
+storeFile=your-keystore.jks
+keyAlias=your-key-alias
+keyPassword=your-key-password
+storePassword=your-store-password
