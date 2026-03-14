@@ -48,10 +48,10 @@ jobs:
             ${{ runner.os }}-build-
 
       - name: Install dependencies
-        run: flutter pub get --no-precompile
+        run: flutter pub get
 
       - name: Build Android APK
-        run: flutter build apk --release --no-pub
+        run: flutter build apk --release
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
