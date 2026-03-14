@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'notes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +32,68 @@ class TodoApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: TodoListScreen(prefs: prefs),
+      home: HomeScreen(prefs: prefs),
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget {
+  final SharedPreferences prefs;
+
+  const HomeScreen({super.key, required this.prefs});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+  bool _isSelectionMode = false;
+
+  void _onSelectionModeChanged(bool isSelectionMode) {
+    setState(() {
+      _isSelectionMode = isSelectionMode;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          TodoListScreen(prefs: widget.prefs),
+          NotesListScreen(onSelectionModeChanged: _onSelectionModeChanged),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _isSelectionMode ? 1 : _currentIndex,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: Colors.transparent,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        onDestinationSelected: (index) {
+          if (!_isSelectionMode) {
+            setState(() {
+              _currentIndex = index;
+            });
+          }
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.check_circle_outline),
+            selectedIcon: Icon(Icons.check_circle),
+            label: 'Todos',
+            tooltip: '',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.note_alt_outlined),
+            selectedIcon: Icon(Icons.note_alt),
+            label: 'Notes',
+            tooltip: '',
+          ),
+        ],
+      ),
     );
   }
 }
