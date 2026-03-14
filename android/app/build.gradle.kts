@@ -1,13 +1,17 @@
+import java.util.Properties // Fixes Unresolved reference: Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val keyProps = Properties().apply {
-    val file = rootProject.file("key.properties")
-    if (file.exists()) load(file.inputStream())
+// Fixed properties loading for Kotlin DSL
+val keyProps = Properties()
+val keyPropsFile = rootProject.file("key.properties")
+if (keyPropsFile.exists()) {
+    keyPropsFile.inputStream().use { keyProps.load(it) }
 }
 
 android {
@@ -21,14 +25,11 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17" // Fixed deprecation warning
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.ramos.todo"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -37,21 +38,25 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keyProps["keyAlias"] as? String
-            keyPassword = keyProps["keyPassword"] as? String
-            storeFile = keyProps["storeFile"]?.let { file(it as String) }
-            storePassword = keyProps["storePassword"] as? String
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            // Use getProperty() for cleaner Kotlin code
+            keyAlias = keyProps.getProperty("keyAlias")
+            keyPassword = keyProps.getProperty("keyPassword")
+            storeFile = keyProps.getProperty("storeFile")?.let { file(it) }
+            storePassword = keyProps.getProperty("storePassword")
         }
     }
 
+    buildTypes {
+        getByName("release") {
+            // Safety check: if no key.properties, use debug so build doesn't crash locally
+            signingConfig = if (keyProps.isEmpty) signingConfigs.getByName("debug") else signingConfigs.getByName("release")
+        }
+    }
+
+    // Fixed the output renaming syntax
     applicationVariants.all {
         outputs.all {
-            val output = this as com.android.build.gradle.internal.api.A    pkVariantOutputImpl
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
             output.outputFileName = "todo.apk"
         }
     }
