@@ -29,22 +29,11 @@ jobs:
           cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:" 
           pub-cache-key: "flutter-pub-:os:-:channel:-:version:-:arch:-:hash:" 
 
-
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build Android APK
         run: flutter build apk --release --split-per-abi
-
-      - name: Rename APK
-        run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/todo.apk
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: build/app/outputs/flutter-apk/todo.apk
-          tag_name: ${{ github.ref_name }}
-
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
