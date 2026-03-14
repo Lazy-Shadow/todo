@@ -25,7 +25,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: true # Speeds up future runs
+          cache: true # ⚡ Enables automatic caching of the SDK
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:" 
+          pub-cache-key: "flutter-pub-:os:-:channel:-:version:-:arch:-:hash:" 
+
 
       - name: Install dependencies
         run: flutter pub get
