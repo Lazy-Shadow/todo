@@ -1,0 +1,45 @@
+name: Flutter Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers for any tag starting with 'v', e.g., v0.1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create the release and upload artifacts
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true # Speeds up future runs
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        # Uses the tag name (e.g., v0.1) as the build name
+        run: flutter build apk --release --build-name=${{ github.ref_name }} --build-number=${{ github.run_number }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app/outputs/flutter-apk/app-release.apk
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true # Automatically lists your commits
