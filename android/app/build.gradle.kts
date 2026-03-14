@@ -1,5 +1,4 @@
-import java.util.Properties // Fixes Unresolved reference: Properties
-import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -7,7 +6,6 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// Fixed properties loading for Kotlin DSL
 val keyProps = Properties()
 val keyPropsFile = rootProject.file("key.properties")
 if (keyPropsFile.exists()) {
@@ -25,12 +23,12 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "17" // Fixed deprecation warning
+        jvmTarget = "17"
     }
 
     defaultConfig {
         applicationId = "com.ramos.todo_list"
-        minSdk = flutter.minSdkVersion
+        minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -39,7 +37,6 @@ android {
 
     signingConfigs {
         create("release") {
-            // Use getProperty() for cleaner Kotlin code
             keyAlias = keyProps.getProperty("keyAlias")
             keyPassword = keyProps.getProperty("keyPassword")
             storeFile = keyProps.getProperty("storeFile")?.let { file(it) }
@@ -59,13 +56,6 @@ android {
         }
         getByName("debug") {
             isMinifyEnabled = false
-        }
-    }
-
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            val outputImpl = output as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            outputImpl.outputFileName = "todo-${variant.name}.apk"
         }
     }
 }
