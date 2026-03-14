@@ -108,7 +108,7 @@ export default function TodoScreen() {
     }
     saveTasks(newTasks);
     setModalVisible(false);
-  };
+  }, [title, description, category, priority, dueDate, editingTask, tasks, saveTasks]);
 
   const toggleComplete = (id: string) => {
     const newTasks = tasks.map(t => 
