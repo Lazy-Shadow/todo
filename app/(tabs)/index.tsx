@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
 import { Storage, Task, Priority } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
 
 export default function TodoScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -22,45 +24,46 @@ export default function TodoScreen() {
     loadTasks();
   }, []);
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     const data = await Storage.getTasks();
     setTasks(data);
-  };
+  }, []);
 
-  const saveTasks = async (newTasks: Task[]) => {
+  const saveTasks = useCallback(async (newTasks: Task[]) => {
     setTasks(newTasks);
     await Storage.saveTasks(newTasks);
-  };
+  }, []);
 
-  const filteredTasks = tasks
-    .filter(task => {
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        if (!task.title.toLowerCase().includes(query) && 
-            !task.description?.toLowerCase().includes(query)) {
-          return false;
+  const filteredTasks = useMemo(() => {
+    return tasks
+      .filter(task => {
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          if (!task.title.toLowerCase().includes(query) && 
+              !task.description?.toLowerCase().includes(query)) {
+            return false;
+          }
         }
-      }
-      if (filter === 'active') return !task.isCompleted;
-      if (filter === 'completed') return task.isCompleted;
-      return true;
-    })
-    .sort((a, b) => {
-      if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      }
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+        if (filter === 'active') return !task.isCompleted;
+        if (filter === 'completed') return task.isCompleted;
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
+        if (PRIORITY_ORDER[a.priority] !== PRIORITY_ORDER[b.priority]) {
+          return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+  }, [tasks, searchQuery, filter]);
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: tasks.length,
     active: tasks.filter(t => !t.isCompleted).length,
     completed: tasks.filter(t => t.isCompleted).length,
-  };
+  }), [tasks]);
 
-  const openAddModal = () => {
+  const openAddModal = useCallback(() => {
     setEditingTask(null);
     setTitle('');
     setDescription('');
@@ -68,9 +71,9 @@ export default function TodoScreen() {
     setPriority('medium');
     setDueDate(null);
     setModalVisible(true);
-  };
+  }, []);
 
-  const openEditModal = (task: Task) => {
+  const openEditModal = useCallback((task: Task) => {
     setEditingTask(task);
     setTitle(task.title);
     setDescription(task.description || '');
@@ -78,9 +81,9 @@ export default function TodoScreen() {
     setPriority(task.priority);
     setDueDate(task.dueDate ? new Date(task.dueDate) : null);
     setModalVisible(true);
-  };
+  }, []);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!title.trim()) {
       Alert.alert('Error', 'Please enter a title');
       return;
