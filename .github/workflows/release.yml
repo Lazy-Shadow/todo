@@ -31,8 +31,17 @@ jobs:
         run: flutter pub get
 
       - name: Build Android APK
-        # Uses the tag name (e.g., v0.1) as the build name
-        run: flutter build apk --release --build-name=${{ github.ref_name }} --build-number=${{ github.run_number }}
+        run: flutter build apk --release
+
+      - name: Rename APK
+        run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/todo.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/app/outputs/flutter-apk/todo.apk
+          tag_name: ${{ github.ref_name }}
+
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
