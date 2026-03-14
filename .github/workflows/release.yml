@@ -16,27 +16,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup Expo
-        uses: expo/expo-github-actions/setup@v1
-        with:
-          expo-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
       - name: Prebuild native code
         run: npx expo prebuild --platform android --clean
-
-      - name: Build Android with EAS
-        run: npx eas build -p android --profile production --non-interactive
         env:
           EXPO_NO_TELEMETRY: 1
 
-      - name: Download APK
-        run: npx eas build:download -p android --output ./output
+      - name: Build Android APK (Local)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
         env:
           EXPO_NO_TELEMETRY: 1
 
@@ -44,12 +37,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: output/*.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: output/*.apk
+          files: android/app/build/outputs/apk/release/app-release.apk
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
