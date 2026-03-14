@@ -6,9 +6,6 @@
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; }
 
-# Keep SharedPreferences
--keep class com.tekartik.sqfite.** { *; }
-
 # Prevent R8 from removing classes that use reflection
 -keepattributes Signature
 -keepattributes *Annotation*
@@ -20,9 +17,7 @@
     native <methods>;
 }
 
-# Keep Kotlin metadata
--keep class kotlin.Metadata { *; }
--dontwarn kotlin.**
-
-# Keep data classes
--keep class com.ramos.todo_list.** { *; }
+# Ignore missing Google Play Core classes (not needed for GitHub releases)
+-dontwarn com.google.android.play.core.**
+-dontwarn com.google.android.gms.**
+-ignorewarnings
