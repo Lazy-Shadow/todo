@@ -51,7 +51,7 @@ jobs:
         run: flutter pub get --no-precompile
 
       - name: Build Android APK
-        run: flutter build apk --release --no-pub --tree-shake-icons=false
+        run: flutter build apk --release --no-pub
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
