@@ -1,4 +1,4 @@
-name: todo
+name: todo_list
 description: "An application for creating todo's as well as notes, made in Flutter By BSIT 2B."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

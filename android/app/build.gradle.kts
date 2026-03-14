@@ -15,7 +15,7 @@ if (keyPropsFile.exists()) {
 }
 
 android {
-    namespace = "com.ramos.todo"
+    namespace = "com.ramos.todo_list"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.ramos.todo"
+        applicationId = "com.ramos.todo_list"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
