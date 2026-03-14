@@ -39,11 +39,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Cache build outputs
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: ${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --no-precompile
 
       - name: Build Android APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-pub --tree-shake-icons=false
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
