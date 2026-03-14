@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "todo",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ramos.todo"
