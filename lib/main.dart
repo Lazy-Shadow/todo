@@ -756,7 +756,6 @@ class _ScrollableDatePicker extends StatefulWidget {
 class _ScrollableDatePickerState extends State<_ScrollableDatePicker> {
   late int _selectedMonth;
   late int _selectedDay;
-  late int _selectedYear;
   late int _selectedHour;
   late int _selectedMinute;
   late bool _isPM;
@@ -769,60 +768,44 @@ class _ScrollableDatePickerState extends State<_ScrollableDatePicker> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
     _selectedMonth = widget.initialDate.month;
     _selectedDay = widget.initialDate.day;
-    _selectedYear = widget.initialDate.year;
     _selectedHour = widget.initialDate.hour == 0 ? 12 : (widget.initialDate.hour > 12 ? widget.initialDate.hour - 12 : widget.initialDate.hour);
     _selectedMinute = widget.initialDate.minute;
     _isPM = widget.initialDate.hour >= 12;
   }
 
-  int _getDaysInMonth(int month, int year) {
-    return DateTime(year, month + 1, 0).day;
-  }
+  int _getDaysInMonth(int month, int year) => DateTime(year, month + 1, 0).day;
 
-  String _getDayOfWeek(int month, int day) {
-    final date = DateTime(_getAutoYear(), month, day);
-    return _weekdays[date.weekday % 7];
-  }
+  String _getDayOfWeek(int month, int day) => _weekdays[DateTime(_getAutoYear(), month, day).weekday % 7];
 
   int _getAutoYear() {
     final now = DateTime.now();
-    final selectedDate = DateTime(_selectedYear, _selectedMonth, _selectedDay);
-    final currentDate = DateTime(now.year, now.month, now.day);
-    
-    if (selectedDate.isBefore(currentDate)) {
-      return _currentYear + 1;
-    }
-    return _currentYear;
+    final selectedDate = DateTime(_selectedMonth, _selectedDay);
+    return selectedDate.isBefore(DateTime(now.year, now.month, now.day)) ? _currentYear + 1 : _currentYear;
   }
 
   void _updateDate() {
     final year = _getAutoYear();
     final daysInMonth = _getDaysInMonth(_selectedMonth, year);
-    if (_selectedDay > daysInMonth) {
-      _selectedDay = daysInMonth;
-    }
+    if (_selectedDay > daysInMonth) _selectedDay = daysInMonth;
     
     int hour24 = _selectedHour;
     if (_isPM && _selectedHour != 12) hour24 += 12;
     if (!_isPM && _selectedHour == 12) hour24 = 0;
 
-    final date = DateTime(year, _selectedMonth, _selectedDay, hour24, _selectedMinute);
-    widget.onDateSelected(date);
+    widget.onDateSelected(DateTime(year, _selectedMonth, _selectedDay, hour24, _selectedMinute));
   }
 
   @override
   Widget build(BuildContext context) {
     final year = _getAutoYear();
     final daysInMonth = _getDaysInMonth(_selectedMonth, year);
-    final days = List.generate(daysInMonth, (i) => i + 1);
     final hours = List.generate(12, (i) => i + 1);
     final minutes = List.generate(60, (i) => i);
 
     return Container(
-      height: 320,
+      height: MediaQuery.of(context).size.width < 600 ? 380 : 320,
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
@@ -833,9 +816,13 @@ class _ScrollableDatePickerState extends State<_ScrollableDatePicker> {
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Cancel'),
               ),
-              Text(
-                '${_getDayOfWeek(_selectedMonth, _selectedDay)}, ${_months[_selectedMonth - 1]} $_selectedDay, ${_getAutoYear()} at $_selectedHour:${_selectedMinute.toString().padLeft(2, '0')} ${_isPM ? 'PM' : 'AM'}',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              Expanded(
+                child: Text(
+                  '${_getDayOfWeek(_selectedMonth, _selectedDay)}, ${_months[_selectedMonth - 1]} $_selectedDay, ${_getAutoYear()} at $_selectedHour:${_selectedMinute.toString().padLeft(2, '0')} ${_isPM ? 'PM' : 'AM'}',
+                  style: TextStyle(fontSize: MediaQuery.of(context).size.width < 600 ? 12 : 14, fontWeight: FontWeight.w500),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.visible,
+                ),
               ),
               TextButton(
                 onPressed: () {
@@ -846,34 +833,16 @@ class _ScrollableDatePickerState extends State<_ScrollableDatePicker> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
           Expanded(
             child: Row(
               children: [
                 Expanded(
                   child: Column(
                     children: [
-                      const Text('Month', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      const Text('Month/Day', style: TextStyle(fontSize: 12, color: Colors.grey)),
                       Expanded(
                         child: _WheelPicker(
-                          items: _months,
-                          selectedIndex: _selectedMonth - 1,
-                          onSelectedItemChanged: (index) {
-                            setState(() => _selectedMonth = index + 1);
-                            _updateDate();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      const Text('Day', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      Expanded(
-                        child: _WheelPicker(
-                          items: days.map((d) => d.toString()).toList(),
+                          items: List.generate(daysInMonth, (i) => '${_months[_selectedMonth - 1]} ${i + 1}'),
                           selectedIndex: _selectedDay - 1,
                           onSelectedItemChanged: (index) {
                             setState(() => _selectedDay = index + 1);
@@ -884,53 +853,45 @@ class _ScrollableDatePickerState extends State<_ScrollableDatePicker> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     children: [
                       const Text('Time', style: TextStyle(fontSize: 12, color: Colors.grey)),
                       Expanded(
-                        child: _WheelPicker(
-                          items: hours.map((h) => h.toString()).toList(),
-                          selectedIndex: _selectedHour - 1,
-                          onSelectedItemChanged: (index) {
-                            setState(() => _selectedHour = index + 1);
-                            _updateDate();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: _WheelPicker(
-                          items: minutes.map((m) => m.toString().padLeft(2, '0')).toList(),
-                          selectedIndex: _selectedMinute,
-                          onSelectedItemChanged: (index) {
-                            setState(() => _selectedMinute = index);
-                            _updateDate();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: _WheelPicker(
-                          items: ['AM', 'PM'],
-                          selectedIndex: _isPM ? 1 : 0,
-                          onSelectedItemChanged: (index) {
-                            setState(() => _isPM = index == 1);
-                            _updateDate();
-                          },
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _WheelPicker(
+                                items: hours.map((h) => h.toString()).toList(),
+                                selectedIndex: _selectedHour - 1,
+                                onSelectedItemChanged: (index) {
+                                  setState(() => _selectedHour = index + 1);
+                                  _updateDate();
+                                },
+                              ),
+                            ),
+                            const Text(':', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            Expanded(
+                              child: _WheelPicker(
+                                items: minutes.map((m) => m.toString().padLeft(2, '0')).toList(),
+                                selectedIndex: _selectedMinute,
+                                onSelectedItemChanged: (index) {
+                                  setState(() => _selectedMinute = index);
+                                  _updateDate();
+                                },
+                              ),
+                            ),
+                            Expanded(
+                              child: _WheelPicker(
+                                items: const ['AM', 'PM'],
+                                selectedIndex: _isPM ? 1 : 0,
+                                onSelectedItemChanged: (index) {
+                                  setState(() => _isPM = index == 1);
+                                  _updateDate();
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
