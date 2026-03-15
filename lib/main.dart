@@ -647,7 +647,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                   title: Text(
                     selectedDate == null
                         ? 'Set due date'
-                        : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                        : _formatDateTime(selectedDate!),
                   ),
                   trailing: selectedDate != null
                       ? IconButton(
@@ -655,16 +655,16 @@ class _TodoListScreenState extends State<TodoListScreen> {
                           onPressed: () => setModalState(() => selectedDate = null),
                         )
                       : null,
-                  onTap: () async {
-                    final date = await showDatePicker(
+                  onTap: () {
+                    showModalBottomSheet(
                       context: context,
-                      initialDate: selectedDate ?? DateTime.now(),
-                      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                      builder: (context) => _ScrollableDatePicker(
+                        initialDate: selectedDate ?? DateTime.now(),
+                        onDateSelected: (date) {
+                          setModalState(() => selectedDate = date);
+                        },
+                      ),
                     );
-                    if (date != null) {
-                      setModalState(() => selectedDate = date);
-                    }
                   },
                 ),
                 const SizedBox(height: 20),
@@ -721,11 +721,267 @@ class _TodoListScreenState extends State<TodoListScreen> {
     _searchController.dispose();
     super.dispose();
   }
+
+  String _formatDateTime(DateTime date) {
+    final weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    final months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    final weekday = weekdays[date.weekday % 7];
+    final month = months[date.month - 1];
+    final day = date.day;
+    final year = date.year;
+    final hour = date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+    return '$weekday, $month $day, $year at $hour:$minute $period';
+  }
 }
 
 // ============================================================================
 // SEPARATED WIDGETS - Extracted for better performance and readability
 // ============================================================================
+
+class _ScrollableDatePicker extends StatefulWidget {
+  final DateTime initialDate;
+  final Function(DateTime) onDateSelected;
+
+  const _ScrollableDatePicker({
+    required this.initialDate,
+    required this.onDateSelected,
+  });
+
+  @override
+  State<_ScrollableDatePicker> createState() => _ScrollableDatePickerState();
+}
+
+class _ScrollableDatePickerState extends State<_ScrollableDatePicker> {
+  late int _selectedMonth;
+  late int _selectedDay;
+  late int _selectedYear;
+  late int _selectedHour;
+  late int _selectedMinute;
+  late bool _isPM;
+
+  final List<String> _months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  final List<String> _weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  int get _currentYear => DateTime.now().year;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedMonth = widget.initialDate.month;
+    _selectedDay = widget.initialDate.day;
+    _selectedYear = widget.initialDate.year;
+    _selectedHour = widget.initialDate.hour == 0 ? 12 : (widget.initialDate.hour > 12 ? widget.initialDate.hour - 12 : widget.initialDate.hour);
+    _selectedMinute = widget.initialDate.minute;
+    _isPM = widget.initialDate.hour >= 12;
+  }
+
+  int _getDaysInMonth(int month, int year) {
+    return DateTime(year, month + 1, 0).day;
+  }
+
+  String _getDayOfWeek(int month, int day) {
+    final date = DateTime(_getAutoYear(), month, day);
+    return _weekdays[date.weekday % 7];
+  }
+
+  int _getAutoYear() {
+    final now = DateTime.now();
+    final selectedDate = DateTime(_selectedYear, _selectedMonth, _selectedDay);
+    final currentDate = DateTime(now.year, now.month, now.day);
+    
+    if (selectedDate.isBefore(currentDate)) {
+      return _currentYear + 1;
+    }
+    return _currentYear;
+  }
+
+  void _updateDate() {
+    final year = _getAutoYear();
+    final daysInMonth = _getDaysInMonth(_selectedMonth, year);
+    if (_selectedDay > daysInMonth) {
+      _selectedDay = daysInMonth;
+    }
+    
+    int hour24 = _selectedHour;
+    if (_isPM && _selectedHour != 12) hour24 += 12;
+    if (!_isPM && _selectedHour == 12) hour24 = 0;
+
+    final date = DateTime(year, _selectedMonth, _selectedDay, hour24, _selectedMinute);
+    widget.onDateSelected(date);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final year = _getAutoYear();
+    final daysInMonth = _getDaysInMonth(_selectedMonth, year);
+    final days = List.generate(daysInMonth, (i) => i + 1);
+    final hours = List.generate(12, (i) => i + 1);
+    final minutes = List.generate(60, (i) => i);
+
+    return Container(
+      height: 320,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              Text(
+                '${_getDayOfWeek(_selectedMonth, _selectedDay)}, ${_months[_selectedMonth - 1]} $_selectedDay, ${_getAutoYear()} at $_selectedHour:${_selectedMinute.toString().padLeft(2, '0')} ${_isPM ? 'PM' : 'AM'}',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              TextButton(
+                onPressed: () {
+                  _updateDate();
+                  Navigator.pop(context);
+                },
+                child: const Text('Done'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Text('Month', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Expanded(
+                        child: _WheelPicker(
+                          items: _months,
+                          selectedIndex: _selectedMonth - 1,
+                          onSelectedItemChanged: (index) {
+                            setState(() => _selectedMonth = index + 1);
+                            _updateDate();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Text('Day', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Expanded(
+                        child: _WheelPicker(
+                          items: days.map((d) => d.toString()).toList(),
+                          selectedIndex: _selectedDay - 1,
+                          onSelectedItemChanged: (index) {
+                            setState(() => _selectedDay = index + 1);
+                            _updateDate();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Text('Time', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Expanded(
+                        child: _WheelPicker(
+                          items: hours.map((h) => h.toString()).toList(),
+                          selectedIndex: _selectedHour - 1,
+                          onSelectedItemChanged: (index) {
+                            setState(() => _selectedHour = index + 1);
+                            _updateDate();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: _WheelPicker(
+                          items: minutes.map((m) => m.toString().padLeft(2, '0')).toList(),
+                          selectedIndex: _selectedMinute,
+                          onSelectedItemChanged: (index) {
+                            setState(() => _selectedMinute = index);
+                            _updateDate();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: _WheelPicker(
+                          items: ['AM', 'PM'],
+                          selectedIndex: _isPM ? 1 : 0,
+                          onSelectedItemChanged: (index) {
+                            setState(() => _isPM = index == 1);
+                            _updateDate();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WheelPicker extends StatelessWidget {
+  final List<String> items;
+  final int selectedIndex;
+  final Function(int) onSelectedItemChanged;
+
+  const _WheelPicker({
+    required this.items,
+    required this.selectedIndex,
+    required this.onSelectedItemChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListWheelScrollView.useDelegate(
+      itemExtent: 45,
+      physics: const BouncingScrollPhysics(),
+      controller: FixedExtentScrollController(initialItem: selectedIndex),
+      onSelectedItemChanged: onSelectedItemChanged,
+      perspective: 0.003,
+      diameterRatio: 1.5,
+      childDelegate: ListWheelChildBuilderDelegate(
+        builder: (context, index) {
+          return Center(
+            child: Text(
+              items[index],
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          );
+        },
+        childCount: items.length,
+      ),
+    );
+  }
+}
 
 // PERFORMANCE TIP: _StatChip is now a STATELESS WIDGET.
 // This means Flutter can reuse it without rebuilding it every time.
