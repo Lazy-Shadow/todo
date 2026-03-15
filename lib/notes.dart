@@ -123,7 +123,12 @@ class _NotesListScreenState extends State<NotesListScreen> {
 
   void _addNote(Note note) {
     setState(() {
-      _notes.add(note);
+      final existingIndex = _notes.indexWhere((n) => n.id == note.id);
+      if (existingIndex != -1) {
+        _notes[existingIndex] = note;
+      } else {
+        _notes.add(note);
+      }
       _sortNotes();
     });
     _saveNotes();
@@ -463,12 +468,14 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late TextEditingController _contentController;
   bool _hasChanges = false;
   bool _isSaving = false;
+  String? _noteId;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.note?.title ?? '');
     _contentController = TextEditingController(text: widget.note?.content ?? '');
+    _noteId = widget.note?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
 
     _titleController.addListener(_onTextChanged);
     _contentController.addListener(_onTextChanged);
@@ -503,7 +510,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
     final now = DateTime.now();
     final note = Note(
-      id: widget.note?.id ?? now.millisecondsSinceEpoch.toString(),
+      id: _noteId!,
       title: title.isEmpty ? 'Untitled' : title,
       content: content,
       createdAt: widget.note?.createdAt ?? now,
@@ -527,6 +534,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         appBar: AppBar(
           title: Text(isEditing ? 'Edit Note' : 'New Note'),
           actions: [
+            TextButton.icon(
+              onPressed: _hasChanges ? () => _saveNote() : null,
+              icon: const Icon(Icons.save),
+              label: const Text('Save'),
+            ),
             if (isEditing && widget.note != null)
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
