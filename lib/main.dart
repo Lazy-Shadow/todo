@@ -144,11 +144,13 @@ class Task {
 
   // Factory constructor from JSON - handles null safely
   factory Task.fromJson(Map<String, dynamic> json) => Task(
-    id: json['id'] as String,
-    title: json['title'] as String,
+    id: json['id'] as String? ?? '',
+    title: json['title'] as String? ?? '',
     description: json['description'] as String?,
     isCompleted: json['isCompleted'] as bool? ?? false,
-    createdAt: DateTime.parse(json['createdAt'] as String),
+    createdAt: json['createdAt'] != null 
+        ? DateTime.parse(json['createdAt'] as String) 
+        : DateTime.now(),
     dueDate: json['dueDate'] != null 
         ? DateTime.parse(json['dueDate'] as String) 
         : null,

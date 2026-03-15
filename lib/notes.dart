@@ -50,11 +50,11 @@ class Note {
   };
 
   factory Note.fromJson(Map<String, dynamic> json) => Note(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    content: json['content'] as String,
-    createdAt: DateTime.parse(json['createdAt'] as String),
-    updatedAt: DateTime.parse(json['updatedAt'] as String),
+    id: json['id'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+    content: json['content'] as String? ?? '',
+    createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
+    updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : DateTime.now(),
     category: json['category'] as String?,
     isPinned: json['isPinned'] as bool? ?? false,
   );
@@ -82,13 +82,14 @@ class _NotesListScreenState extends State<NotesListScreen> {
     _loadNotes();
   }
 
-  void _loadNotes() async {
+  Future<void> _loadNotes() async {
     final prefs = await SharedPreferences.getInstance();
     final String? notesJson = prefs.getString('notes');
 
     if (notesJson != null) {
       try {
         final List<dynamic> decoded = jsonDecode(notesJson);
+        if (!mounted) return;
         setState(() {
           _notes = decoded.map((n) => Note.fromJson(n as Map<String, dynamic>)).toList();
           _sortNotes();
